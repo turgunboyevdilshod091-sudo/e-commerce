@@ -1,10 +1,13 @@
-from aiogram import F,Router
+from aiogram import F,Router,Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message,CallbackQuery
 from state.register import Registerstate
 from keyboards.inline import tasdiqlash_button
+from config import config
 
 router=Router()
+ADMIN_ID=config.ADMIN_ID
+bot=Bot(token=config.BOT_TOKEN)
 
 @router.message(F.text=='Register')
 async def register(msg:Message,state:FSMContext):
@@ -33,10 +36,28 @@ async def register(msg:Message,state:FSMContext):
 async def register(msg:Message,state:FSMContext):
     await state.update_data(phone=msg.text)
     data=await state.get_data()
-    await msg.answer(f'Ismingiz: {data['name']}\nFamilyangiz: {data["surename"]}\nYoshingiz: {data['age']}\nTelefon raqamingiz: {data["phone"]}',reply_markup=tasdiqlash_button())
+    await msg.answer(f"""Ma'lumotlaringiz to'grimi?
+Ismingiz: {data['name']}
+Familyangiz: {data["surename"]}
+Yoshingiz: {data['age']}
+Telefon raqamingiz: {data["phone"]}
+""",reply_markup=tasdiqlash_button())
+    await state.set_state(Registerstate.confirm)
 
-@router.callback_query(F.data=="tasdiqlash")
-async def tasdiqlash(call:CallbackQuery,state:FSMContext):
-    await call.message.answer("Ma`lumotlaringiz saqlandi")
-    await state.clear()
-    await call.answer()
+@router.callback_query(Registerstate.confirm,F.data)
+async def confirm_handler(call:CallbackQuery,state:FSMContext):
+    if call.data=="done":
+            data=await state.get_data()
+            await bot.send_message(chat_id=ADMIN_ID,text=f"""Yangi foydalanuvchi ro'yxatdan o'tdi
+Ism: {data['name']}
+Familya: {data["surename"]}
+Yosh: {data['age']}
+Telefon raqam: {data["phone"]}
+""")
+            await call.message.answer("Muvaffaqiyatli ro'yxatdan o'tdingiz")
+            await state.clear()
+            await call.answer()
+    elif call.data=='cancel':
+         await call.message.answer("Qaytadan ro'yxatdan o'tish boshlandi\nIltimos ismingizni kiriting")
+         await state.set_state(Registerstate.name)
+         await call.answer()

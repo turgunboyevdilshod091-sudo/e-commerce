@@ -5,3 +5,4 @@ class Registerstate(StatesGroup):
     surename=State()
     age=State()
     phone=State()
+    confirm=State()
