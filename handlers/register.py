@@ -4,6 +4,9 @@ from aiogram.types import Message,CallbackQuery
 from state.register import Registerstate
 from keyboards.inline import tasdiqlash_button
 from config import config
+from databases.database import Database
+
+db=Database()
 
 router=Router()
 ADMIN_ID=config.ADMIN_ID
@@ -54,6 +57,12 @@ Familya: {data["surename"]}
 Yosh: {data['age']}
 Telefon raqam: {data["phone"]}
 """)
+            user_id=call.from_user.id
+            ism=data["name"]
+            fam=data["surename"]
+            age=data["age"]
+            tel=data["phone"]
+            db.add_user(user_id,ism,fam,age,tel)
             await call.message.answer("Muvaffaqiyatli ro'yxatdan o'tdingiz")
             await state.clear()
             await call.answer()
